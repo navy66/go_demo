@@ -1,0 +1,36 @@
+package main
+
+import (
+"fmt"
+"io/ioutil"
+"net/http"
+"sync"
+
+"github.com/PuerkitoBio/goquery"
+)
+
+var wg sync.WaitGroup
+
+func openUrl(url string) error {
+
+resp, err := http.Get(url)
+if err != nil {
+return err
+}
+defer resp.Body.Close()
+// body, _ := ioutil.ReadAll(resp.Body)
+// fmt.Println(string(body))
+doc, _ := goquery.NewDocumentFromReader(resp.Body)
+email := doc.Find("email").Text()
+ioutil.WriteFile("emial.txt", []byte(email), 0666)
+wg.Done()
+}
+
+func main() {
+for i := 1; i &lt; 101; i++ {
+wg.Add(1)
+url := fmt.Sprintf("https://jsonplaceholder.typicode.com/posts/%v/comments", i)
+go openUrl(url)
+}
+wg.Wait()
+}
